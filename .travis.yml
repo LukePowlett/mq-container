@@ -47,6 +47,7 @@ stages:
     if: type IN (pull_request)
 
 jobs:
+  # fast_finish: true
   include:
     - stage: build
       script: 
@@ -75,6 +76,31 @@ jobs:
         echo 'Testing Developer image...' && echo -en 'travis_fold:start:test-devserver\\r' && \
         make test-devserver && \
         echo -en 'travis_fold:end:test-devserver\\r'
+
+# jobs:
+#   include:
+#       - stage: test
+
+#         before_install:
+#           - ./install-build-deps-ubuntu.sh
+                
+#         install:
+#           - echo 'Downloading Go dependencies...' && echo -en 'travis_fold:start:deps\\r'
+#           - make deps
+#           - echo -en 'travis_fold:end:deps\\r'
+
+#         before_script:
+#           - echo 'Building Developer image...' && echo -en 'travis_fold:start:build-devserver\\r'
+#           - make build-devserver
+#           - echo -en 'travis_fold:end:build-devserver\\r'
+#           - echo 'Building Developer JMS test image...' && echo -en 'travis_fold:start:build-devjmstest\\r'
+#           - make build-devjmstest
+
+#         script:
+#           - echo 'Testing Developer image...' && echo -en 'travis_fold:start:test-devserver\\r'
+#           - make test-devserver
+#           - echo -en 'travis_fold:end:test-devserver\\r'
+
 
 after_success:
   - make lint
