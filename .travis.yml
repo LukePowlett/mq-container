@@ -32,19 +32,6 @@ env:
 # Commented out temporarily until Issue 166 is resolved
 #  - BASE_IMAGE=centos:latest
 
-jobs:
-  include:
-    - if: type IN (pull_request)
-      env: DOCKER_DOWNGRADE="docker save -o images.tar mqadvanced-server-dev mq-dev-jms-test &&
-        sudo apt-get autoremove -y docker-ce &&
-        curl -fsSL \"https://apt.dockerproject.org/gpg\" | sudo apt-key add - &&
-        sudo apt-add-repository \"deb https://apt.dockerproject.org/repo ubuntu-$(lsb_release -cs) main\" &&
-        sudo apt-get update &&
-        sudo apt-get install docker-engine=1.12.6-0~ubuntu-$(lsb_release -cs) &&
-        docker load -q -i images.tar &&
-        export DOCKER_API_VERSION=\"1.24\""
-    - env: DOCKER_DOWNGRADE="echo nothing to be done"
-
 before_install:
   - ./install-build-deps-ubuntu.sh
 
@@ -53,19 +40,41 @@ install:
   - make deps
   - echo -en 'travis_fold:end:deps\\r'
 
-script:
-  - echo 'Building Developer image...' && echo -en 'travis_fold:start:build-devserver\\r'
-  - make build-devserver
-  - echo -en 'travis_fold:end:build-devserver\\r'
-  - echo 'Building Developer JMS test image...' && echo -en 'travis_fold:start:build-devjmstest\\r'
-  - make build-devjmstest
-  - echo -en 'travis_fold:end:build-devjmstest\\r'
-  - echo 'Downgrading Docker (if necessary)...' && echo -en 'travis_fold:start:docker-downgrade\\r'
-  - eval "$DOCKER_DOWNGRADE"
-  - echo -en 'travis_fold:end:docker-downgrade\\r'
-  - echo 'Testing Developer image...' && echo -en 'travis_fold:start:test-devserver\\r'
-  - make test-devserver
-  - echo -en 'travis_fold:end:test-devserver\\r'
+stages:
+  - build 
+  - test
+  - downgrade
+    if: type IN (pull_request)
+
+jobs:
+  include:
+    - stage: build
+      script: 
+        echo 'Building Developer image...' && echo -en 'travis_fold:start:build-devserver\\r' && \
+        make build-devserver && \
+        echo -en 'travis_fold:end:build-devserver\\r' && \
+        echo 'Building Developer JMS test image...' && echo -en 'travis_fold:start:build-devjmstest\\r' && \
+        make build-devjmstest
+    - stage: test
+      script:
+        echo 'Testing Developer image...' && echo -en 'travis_fold:start:test-devserver\\r' && \
+        make test-devserver && \
+        echo -en 'travis_fold:end:test-devserver\\r'
+    - stage: downgrade
+      env: DOCKER_DOWNGRADE="docker save -o images.tar mqadvanced-server-dev mq-dev-jms-test &&
+      sudo apt-get autoremove -y docker-ce &&
+      curl -fsSL \"https://apt.dockerproject.org/gpg\" | sudo apt-key add - &&
+      sudo apt-add-repository \"deb https://apt.dockerproject.org/repo ubuntu-$(lsb_release -cs) main\" &&
+      sudo apt-get update &&
+      sudo apt-get install docker-engine=1.12.6-0~ubuntu-$(lsb_release -cs) &&
+      docker load -q -i images.tar &&
+      export DOCKER_API_VERSION=\"1.24\""
+      script:
+        echo 'Downgrading Docker (if necessary)...' && echo -en 'travis_fold:start:docker-downgrade\\r' && \
+        eval "$DOCKER_DOWNGRADE"
+        echo 'Testing Developer image...' && echo -en 'travis_fold:start:test-devserver\\r' && \
+        make test-devserver && \
+        echo -en 'travis_fold:end:test-devserver\\r'
 
 after_success:
   - make lint
