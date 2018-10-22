@@ -43,8 +43,8 @@ install:
 stages:
   - build 
   - test
-  - downgrade
-    if: type IN (pull_request)
+  - name: downgrade
+    if: type=pull_request
 
 jobs:
   # fast_finish: true
@@ -62,17 +62,17 @@ jobs:
         make test-devserver && \
         echo -en 'travis_fold:end:test-devserver\\r'
     - stage: downgrade
-      env: DOCKER_DOWNGRADE="docker save -o images.tar mqadvanced-server-dev mq-dev-jms-test &&
-      sudo apt-get autoremove -y docker-ce &&
-      curl -fsSL \"https://apt.dockerproject.org/gpg\" | sudo apt-key add - &&
-      sudo apt-add-repository \"deb https://apt.dockerproject.org/repo ubuntu-$(lsb_release -cs) main\" &&
-      sudo apt-get update &&
-      sudo apt-get install docker-engine=1.12.6-0~ubuntu-$(lsb_release -cs) &&
-      docker load -q -i images.tar &&
-      export DOCKER_API_VERSION=\"1.24\""
       script:
         echo 'Downgrading Docker (if necessary)...' && echo -en 'travis_fold:start:docker-downgrade\\r' && \
-        eval "$DOCKER_DOWNGRADE"
+        docker save -o images.tar mqadvanced-server-dev mq-dev-jms-test && \
+        sudo apt-get autoremove -y docker-ce && \
+        curl -fsSL \"https://apt.dockerproject.org/gpg\" | sudo apt-key add - && \
+        sudo apt-add-repository \"deb https://apt.dockerproject.org/repo ubuntu-$(lsb_release -cs) main\" && \ 
+        sudo apt-get update && \
+        sudo apt-get install docker-engine=1.12.6-0~ubuntu-$(lsb_release -cs) && \
+        docker load -q -i images.tar && \
+        export DOCKER_API_VERSION=\"1.24\"" && \
+        
         echo 'Testing Developer image...' && echo -en 'travis_fold:start:test-devserver\\r' && \
         make test-devserver && \
         echo -en 'travis_fold:end:test-devserver\\r'
