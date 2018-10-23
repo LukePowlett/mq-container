@@ -17,7 +17,7 @@
 # the command line
 ###############################################################################
 # BASE_IMAGE is the base image to use for MQ, for example "ubuntu" or "rhel"
-BASE_IMAGE ?= ubuntu:16.04
+BASE_IMAGE ?= ubuntu:616.04
 # MQ_VERSION is the fully qualified MQ version number to build
 MQ_VERSION ?= 9.1.0.0
 # MQ_ARCHIVE is the name of the file, under the downloads directory, from which MQ Advanced can

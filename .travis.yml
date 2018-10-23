@@ -49,11 +49,12 @@ before_install:
   - ./install-build-deps-ubuntu.sh
 
 install:
+  - echo nothing
+
+before_script:
   - echo 'Downloading Go dependencies...' && echo -en 'travis_fold:start:deps\\r'
   - make deps
   - echo -en 'travis_fold:end:deps\\r'
-
-before_script:
   - echo 'Building Developer image...' && echo -en 'travis_fold:start:build-devserver\\r'
   - make build-devserver
   - echo -en 'travis_fold:end:build-devserver\\r'
